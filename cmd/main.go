@@ -12,7 +12,8 @@ const inputPath = "resources/"
 var problems = []advent.Problem{
 	//advent.NewDay1(),
 	//advent.NewDay2(),
-	advent.NewDay3(),
+	//advent.NewDay3(),
+	advent.NewDay4(),
 }
 
 func main() {
