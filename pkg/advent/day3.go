@@ -4,17 +4,19 @@ import (
 	"advent/pkg/utils"
 	"fmt"
 	"io"
-	"strings"
 	"unicode"
 )
+
+const GroupSize = 3
 
 type Item rune
 type Day3 struct {
 	rucksacks []Rucksack
 }
 type Rucksack struct {
-	c1 string
-	c2 string
+	r1 map[rune]int
+	r2 map[rune]int
+	r3 map[rune]int
 }
 
 func NewDay3() *Day3 {
@@ -25,22 +27,42 @@ func (d Day3) FileName() string {
 }
 
 func (d *Day3) Load(reader io.Reader) error {
-	lines, err := utils.ReadFile(reader, func(s string) (Rucksack, error) {
-		mid := len(s) / 2
-		return Rucksack{c1: s[:mid], c2: s[mid:]}, nil
-	})
+	//every 3 lines
+	lines, err := utils.Readlines(reader)
+	var rucksacks []Rucksack
 	if err != nil {
 		return err
 	}
-	d.rucksacks = lines
+	if len(lines) < GroupSize || len(lines)%GroupSize != 0 {
+		return fmt.Errorf("cannot process rucksacks, %q rucksacks read, not multiple of 3", len(lines))
+	}
+	for i := GroupSize - 1; i < len(lines); i += GroupSize {
+		if (i+1)%GroupSize == 0 {
+			rucksacks = append(rucksacks, createRucksack(lines[i], lines[i-1], lines[i-2]))
+		}
+	}
+
+	d.rucksacks = rucksacks
 	return nil
 }
+
+func createRucksack(r1, r2, r3 string) Rucksack {
+	return Rucksack{letterMap(r1), letterMap(r2), letterMap(r3)}
+}
+
+func letterMap(s string) map[rune]int {
+	var keys = make(map[rune]int)
+	for _, l := range s {
+		keys[l] += 1
+	}
+	return keys
+}
+
 func (r Rucksack) getShared() Item {
-	//var shared []Item
-	for _, letter := range r.c1 {
-		if strings.ContainsRune(r.c2, letter) {
-			//shared = append(shared, Item(letter))
-			return Item(letter)
+	//if key is found in all rucksacks
+	for k, _ := range r.r1 {
+		if r.r2[k] != 0 && r.r3[k] != 0 {
+			return Item(k)
 		}
 	}
 	return 0
@@ -52,12 +74,12 @@ func (d Day3) Solve() (string, error) {
 	}
 	sum := 0
 	for _, item := range matches {
-		sum += item.toPriority()
+		sum += item.ToPriority()
 	}
 	return fmt.Sprintf("%d", sum), nil
 }
 
-func (i Item) toPriority() int {
+func (i Item) ToPriority() int {
 	if unicode.IsUpper(rune(i)) {
 		return int(i - 'A' + 27)
 	}

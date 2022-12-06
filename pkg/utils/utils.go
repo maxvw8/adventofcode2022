@@ -11,6 +11,21 @@ import (
 // It returns the converted type or an error if the convertion was not possible
 type StringParseFn[T any] func(string) (T, error)
 
+func Readlines(r io.Reader) ([]string, error) {
+	scanner := bufio.NewScanner(r)
+	scanner.Split(bufio.ScanLines)
+	var result []string
+	var line string
+	for scanner.Scan() {
+		line = strings.TrimSpace(scanner.Text())
+		if len(line) == 0 {
+			continue
+		}
+		result = append(result, line)
+	}
+	return result, scanner.Err()
+}
+
 func ReadFile[T any](r io.Reader, parser func(string) (T, error)) ([]T, error) {
 	scanner := bufio.NewScanner(r)
 	scanner.Split(bufio.ScanLines)
@@ -29,7 +44,6 @@ func ReadFile[T any](r io.Reader, parser func(string) (T, error)) ([]T, error) {
 	}
 	return result, scanner.Err()
 }
-
 func ReadBlocks[T any](r io.Reader, parser func(string) (T, error)) ([][]T, error) {
 	scanner := bufio.NewScanner(r)
 	scanner.Split(bufio.ScanLines)
